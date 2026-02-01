@@ -24,7 +24,7 @@ pipeline {
         stage('Execute Tests') {
             steps {
                 // Executa os testes e gera o relatório
-                sh 'mvn clean test; mvn test-compile exec:java -DargLine="-Dkarate.env=qa"'
+                sh 'mvn clean test; mvn test-compile org.codehaus.mojo:exec-maven-plugin:3.1.0:java -DargLine="-Dkarate.env=qa"'
             }
             post {
                 always {
