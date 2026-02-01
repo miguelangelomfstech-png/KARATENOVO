@@ -15,7 +15,13 @@
         <karate.version>1.4.1</karate.version>
         <lombok.version>1.18.30</lombok.version>
     </properties>
-
+<configuration>
+    <inputDirectory>${project.build.directory}</inputDirectory>
+    <includes>
+        <include>confluence-report.md</include>
+    </includes>
+    <wikiFilesExt>.md</wikiFilesExt>
+</configuration>
     <dependencies>
         <!-- Karate Framework -->
         <dependency>
