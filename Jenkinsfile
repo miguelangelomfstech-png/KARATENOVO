@@ -19,6 +19,15 @@ pipeline {
         always {
             junit '**/target/surefire-reports/*.xml'
             cucumber '**/target/karate-reports/*.json'
+            script {
+                 // Generate Confluence Report
+                 try {
+                     sh 'mvn org.codehaus.mojo:exec-maven-plugin:3.1.0:java -Dexec.mainClass="com.api.framework.helpers.ConfluenceReportGenerator" -Dexec.classpathScope="test"'
+                     archiveArtifacts artifacts: 'target/confluence-report.md', allowEmptyArchive: true
+                 } catch (Exception e) {
+                     echo 'Failed to generate Confluence Report'
+                 }
+            }
             archiveArtifacts artifacts: 'target/karate-reports/**/*', allowEmptyArchive: true
         }
     }

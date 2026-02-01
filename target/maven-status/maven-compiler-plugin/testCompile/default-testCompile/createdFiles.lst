@@ -1,5 +1,6 @@
 com\api\framework\helpers\ClientFactory.class
 com\api\framework\TestRunner.class
+com\api\framework\helpers\ConfluenceReportGenerator.class
 com\api\framework\models\UserRequest.class
 com\api\framework\BaseTest.class
 com\api\framework\models\UserRequest$UserRequestBuilder.class
