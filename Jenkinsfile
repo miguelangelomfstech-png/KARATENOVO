@@ -23,9 +23,8 @@ pipeline {
 
         stage('Execute Tests') {
             steps {
-                // Executa os testes e gera os arquivos de saída para o report
-                // O Karate geralmente gera relatórios em target/karate-reports
-                sh 'mvn test-compile exec:java -DargLine="-Dkarate.env=qa"'
+                // Executa os testes e gera o relatório
+                sh 'mvn clean test; mvn test-compile exec:java -DargLine="-Dkarate.env=qa"'
             }
             post {
                 always {
@@ -37,8 +36,8 @@ pipeline {
 
         stage('Archive Reports') {
             steps {
-                // Arquiva o report HTML do Karate ou Cucumber para visualização posterior
-                archiveArtifacts artifacts: '**/target/karate-reports/**', allowEmptyArchive: true
+                // Arquiva o report HTML e o Markdown do Confluence
+                archiveArtifacts artifacts: '**/target/karate-reports/**, **/target/confluence-report.md', allowEmptyArchive: true
             }
         }
     }
