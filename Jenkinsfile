@@ -25,7 +25,7 @@ pipeline {
             steps {
                 // Executa os testes e gera os arquivos de saída para o report
                 // O Karate geralmente gera relatórios em target/karate-reports
-                sh 'mvn test -DargLine="-Dkarate.env=qa"'
+                sh 'mvn test-compile exec:java -DargLine="-Dkarate.env=qa"'
             }
             post {
                 always {
