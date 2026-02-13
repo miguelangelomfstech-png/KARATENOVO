@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Automation Benchmark Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+      }
+      .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+        margin-top: 30px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 30px;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background-color: #2c3e50;
+        color: white;
+      }
+      tr:hover {
+        background-color: #f1f1f1;
+      }
+      .footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 0.9em;
+        color: #777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Automation Framework Benchmark</h1>
+      <p>
+        Comparison of execution time for a simple "Open Google" test across
+        different frameworks.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Framework</th>
+            <th>Language</th>
+            <th>Execution Time (s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>KARATENOVO</td>
+            <td>Karate</td>
+            <td>Java</td>
+            <td>12.07</td>
+          </tr>
+          <tr>
+            <td>KARATENOVO_PLAYWRIGHT</td>
+            <td>Playwright</td>
+            <td>Java</td>
+            <td>17.10</td>
+          </tr>
+          <tr>
+            <td>KARATENOVO_SELENIUM</td>
+            <td>Selenium</td>
+            <td>Java</td>
+            <td>9.10</td>
+          </tr>
+          <tr>
+            <td>KARATENOVO_SELENIUM_CSHARP</td>
+            <td>Selenium</td>
+            <td>C#</td>
+            <td>4.30</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="chart-container">
+        <canvas id="benchmarkChart"></canvas>
+      </div>
+
+      <div class="footer">Generated on <span id="date"></span></div>
+    </div>
+
+    <script>
+      document.getElementById("date").innerText = new Date().toLocaleString();
+
+      const ctx = document.getElementById("benchmarkChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [
+            "Karate (Java)",
+            "Playwright (Java)",
+            "Selenium (Java)",
+            "Selenium (C#)",
+          ],
+          datasets: [
+            {
+              label: "Execution Time (seconds)",
+              data: [12.07, 17.1, 9.1, 4.3],
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.6)",
+                "rgba(54, 162, 235, 0.6)",
+                "rgba(255, 206, 86, 0.6)",
+                "rgba(75, 192, 192, 0.6)",
+              ],
+              borderColor: [
+                "rgba(255, 99, 132, 1)",
+                "rgba(54, 162, 235, 1)",
+                "rgba(255, 206, 86, 1)",
+                "rgba(75, 192, 192, 1)",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "Seconds",
+              },
+            },
+          },
+          responsive: true,
+          maintainAspectRatio: false,
+        },
+      });
+    </script>
+  </body>
+</html>

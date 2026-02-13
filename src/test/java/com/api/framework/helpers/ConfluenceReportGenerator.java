@@ -2,19 +2,20 @@ package com.api.framework.helpers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.poi.xwpf.usermodel.*;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class ConfluenceReportGenerator {
 
     private static final String TARGET_DIR = "target/karate-reports";
     private static final String SUMMARY_FILE = "karate-summary-json.txt";
-    private static final String OUTPUT_FILE = "target/confluence-report.md";
+    private static final String OUTPUT_FILE = "target/confluence-report.docx";
 
     public static void main(String[] args) {
-        System.out.println("Generating Confluence Report...");
+        System.out.println("Generating Confluence Word Report...");
         try {
             generateReport();
             System.out.println("Report generated successfully: " + OUTPUT_FILE);
@@ -34,84 +35,127 @@ public class ConfluenceReportGenerator {
         }
 
         JsonNode summaryNode = mapper.readTree(summaryFile);
-        StringBuilder md = new StringBuilder();
 
-        md.append("# Test Execution Report\n\n");
-        md.append("**Date**: ").append(summaryNode.path("resultDate").asText()).append("\n");
-        md.append("**Total Time**: ").append(summaryNode.path("totalTime").asDouble() / 1000).append("s\n\n");
+        try (XWPFDocument document = new XWPFDocument()) {
+            // Title
+            XWPFParagraph title = document.createParagraph();
+            title.setAlignment(ParagraphAlignment.CENTER);
+            XWPFRun titleRun = title.createRun();
+            titleRun.setText("Test Execution Report");
+            titleRun.setBold(true);
+            titleRun.setFontSize(16);
 
-        md.append("## Summary\n");
-        md.append("| Feature | Scenarios | Passed | Failed | Duration (s) |\n");
-        md.append("| :--- | :--- | :--- | :--- | :--- |\n");
+            // Metadata
+            XWPFParagraph meta = document.createParagraph();
+            XWPFRun metaRun = meta.createRun();
+            metaRun.setText("Date: " + summaryNode.path("resultDate").asText());
+            metaRun.addBreak();
+            metaRun.setText(
+                    "Total Time: " + String.format("%.2f", summaryNode.path("totalTime").asDouble() / 1000) + "s");
 
-        JsonNode features = summaryNode.path("featureSummary");
-        if (features.isArray()) {
-            for (JsonNode feature : features) {
-                String name = feature.path("name").asText();
-                int scenarioCount = feature.path("scenarioCount").asInt();
-                int passedCount = feature.path("passedCount").asInt();
-                int failedCount = feature.path("failedCount").asInt();
-                double duration = feature.path("durationMillis").asDouble() / 1000;
+            // Summary Table
+            XWPFParagraph summaryHeader = document.createParagraph();
+            XWPFRun summaryHeaderRun = summaryHeader.createRun();
+            summaryHeaderRun.setText("Summary");
+            summaryHeaderRun.setBold(true);
+            summaryHeaderRun.setFontSize(14);
 
-                md.append("| ").append(name).append(" | ")
-                        .append(scenarioCount).append(" | ")
-                        .append(passedCount).append(" | ")
-                        .append(failedCount).append(" | ")
-                        .append(String.format("%.2f", duration)).append(" |\n");
-            }
-        }
+            XWPFTable table = document.createTable();
+            XWPFTableRow headerRow = table.getRow(0);
+            headerRow.getCell(0).setText("Feature");
+            headerRow.addNewTableCell().setText("Scenarios");
+            headerRow.addNewTableCell().setText("Passed");
+            headerRow.addNewTableCell().setText("Failed");
+            headerRow.addNewTableCell().setText("Duration (s)");
 
-        md.append("\n---\n\n## Detailed Results\n");
-
-        if (features.isArray()) {
-            for (JsonNode feature : features) {
-                String pkgName = feature.path("packageQualifiedName").asText();
-                String jsonFileName = pkgName + ".karate-json.txt";
-                File jsonFile = new File(TARGET_DIR, jsonFileName);
-
-                if (jsonFile.exists()) {
-                    processFeatureDetail(mapper.readTree(jsonFile), md);
+            JsonNode features = summaryNode.path("featureSummary");
+            if (features.isArray()) {
+                for (JsonNode feature : features) {
+                    XWPFTableRow row = table.createRow();
+                    row.getCell(0).setText(feature.path("name").asText());
+                    row.getCell(1).setText(String.valueOf(feature.path("scenarioCount").asInt()));
+                    row.getCell(2).setText(String.valueOf(feature.path("passedCount").asInt()));
+                    row.getCell(3).setText(String.valueOf(feature.path("failedCount").asInt()));
+                    row.getCell(4).setText(String.format("%.2f", feature.path("durationMillis").asDouble() / 1000));
                 }
             }
-        }
 
-        try (FileWriter writer = new FileWriter(OUTPUT_FILE)) {
-            writer.write(md.toString());
+            document.createParagraph().createRun().addBreak();
+
+            // Detailed Results
+            XWPFParagraph detailsHeader = document.createParagraph();
+            XWPFRun detailsHeaderRun = detailsHeader.createRun();
+            detailsHeaderRun.setText("Detailed Results");
+            detailsHeaderRun.setBold(true);
+            detailsHeaderRun.setFontSize(14);
+
+            if (features.isArray()) {
+                for (JsonNode feature : features) {
+                    processFeatureDetail(mapper, feature, document);
+                }
+            }
+
+            try (FileOutputStream out = new FileOutputStream(OUTPUT_FILE)) {
+                document.write(out);
+            }
         }
     }
 
-    private static void processFeatureDetail(JsonNode featureNode, StringBuilder md) {
-        md.append("### ").append(featureNode.path("name").asText()).append("\n\n");
+    private static void processFeatureDetail(ObjectMapper mapper, JsonNode featureNode, XWPFDocument document)
+            throws IOException {
+        XWPFParagraph featureTitle = document.createParagraph();
+        XWPFRun featureTitleRun = featureTitle.createRun();
+        featureTitleRun.setText("Feature: " + featureNode.path("name").asText());
+        featureTitleRun.setBold(true);
+        featureTitleRun.setFontSize(12);
 
-        JsonNode scenarios = featureNode.path("scenarioResults");
-        if (scenarios.isArray()) {
-            for (JsonNode scenario : scenarios) {
-                String name = scenario.path("name").asText();
-                boolean failed = scenario.path("failed").asBoolean();
-                String status = failed ? "**FAILED**" : "**PASSED**";
+        String pkgName = featureNode.path("packageQualifiedName").asText();
+        String jsonFileName = pkgName + ".karate-json.txt";
+        File jsonFile = new File(TARGET_DIR, jsonFileName);
 
-                md.append("#### ").append(name).append("\n");
-                md.append("- **Status**: ").append(status).append("\n");
-                md.append("- **Duration**: ").append(scenario.path("durationMillis").asDouble()).append("ms\n\n");
+        if (jsonFile.exists()) {
+            JsonNode featureDetail = mapper.readTree(jsonFile);
+            JsonNode scenarios = featureDetail.path("scenarioResults");
 
-                // Extract requests/responses if needed
-                // This logic iterates through steps to find requests and responses
-                JsonNode steps = scenario.path("stepResults");
-                if (steps.isArray()) {
-                    for (JsonNode stepResult : steps) {
+            if (scenarios.isArray()) {
+                for (JsonNode scenario : scenarios) {
+                    String name = scenario.path("name").asText();
+                    boolean failed = scenario.path("failed").asBoolean();
+                    String status = failed ? "FAILED" : "PASSED";
 
-                        String stepLog = stepResult.path("stepLog").asText();
+                    XWPFParagraph scenarioPara = document.createParagraph();
+                    XWPFRun scenarioRun = scenarioPara.createRun();
+                    scenarioRun.setText("Scenario: " + name);
+                    scenarioRun.setBold(true);
+                    scenarioRun.addBreak();
+                    scenarioRun.setText("Status: " + status);
+                    if (failed) {
+                        scenarioRun.setColor("FF0000");
+                    } else {
+                        scenarioRun.setColor("008000");
+                    }
+                    scenarioRun.addBreak();
+                    scenarioRun.setText("Duration: " + scenario.path("durationMillis").asDouble() + "ms");
 
-                        if (stepLog != null && !stepLog.isEmpty()) {
-                            // Simple regex or check to identify request/response logs
-                            if (stepLog.contains("request:") || stepLog.contains("response time in milliseconds")) {
-                                md.append("```\n").append(stepLog.trim()).append("\n```\n\n");
+                    // Logs
+                    JsonNode steps = scenario.path("stepResults");
+                    if (steps.isArray()) {
+                        for (JsonNode stepResult : steps) {
+                            String stepLog = stepResult.path("stepLog").asText();
+                            if (stepLog != null && !stepLog.isEmpty()
+                                    && (stepLog.contains("request:") || stepLog.contains("response time"))) {
+                                XWPFParagraph logPara = document.createParagraph();
+                                logPara.setBorderLeft(Borders.SINGLE);
+                                XWPFRun logRun = logPara.createRun();
+                                logRun.setFontFamily("Courier New");
+                                logRun.setFontSize(9);
+                                logRun.setText(stepLog.trim());
                             }
                         }
                     }
                 }
             }
         }
-        md.append("\n");
+        document.createParagraph().createRun().addBreak();
     }
 }

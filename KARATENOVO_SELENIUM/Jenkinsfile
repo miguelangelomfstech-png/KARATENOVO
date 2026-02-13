@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven 3.8.6' 
+        jdk 'Java 17' 
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('KARATENOVO_SELENIUM') {
+                    sh 'mvn clean test'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            junit 'KARATENOVO_SELENIUM/target/surefire-reports/*.xml'
+        }
+    }
+}

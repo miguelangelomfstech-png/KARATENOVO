@@ -1,0 +1,15 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  SeleniumTests -> C:\Users\migue\git\KARATENOVO\KARATENOVO_SELENIUM_CSHARP\bin\Debug\net8.0\SeleniumTests.dll
+Test run for C:\Users\migue\git\KARATENOVO\KARATENOVO_SELENIUM_CSHARP\bin\Debug\net8.0\SeleniumTests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Setting up driver...
+Driver binary setup complete.
+ChromeDriver instantiated.
+Page title is: Google
+
+
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 4 s - SeleniumTests.dll (net8.0)

@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('KARATENOVO_SELENIUM_CSHARP') {
+                    bat 'dotnet restore'
+                    bat 'dotnet test --logger "trx;LogFileName=test_results.trx"'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+             mstest testResultsFile: 'KARATENOVO_SELENIUM_CSHARP/TestResults/*.trx', keepLongStdio: true
+        }
+    }
+}

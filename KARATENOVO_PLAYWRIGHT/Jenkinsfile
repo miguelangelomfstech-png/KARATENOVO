@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    tools {
+        // Ensure that 'maven-3.9' and 'jdk-17' (or appropriate JDK) 
+        // match what is configured in "Global Tool Configuration" in your Jenkins
+        maven 'maven-3.9'
+        jdk 'jdk-17'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Update URL to the new repo if/when it's pushed.
+                // For now, it assumes the same repo but looking into the subfolder 
+                // or if this Jenkinsfile is at the root of the new project.
+                checkout scm
+            }
+        }
+
+        stage('Build & Clean') {
+            steps {
+                dir('KARATENOVO_PLAYWRIGHT') {
+                     sh 'mvn clean compile'
+                }
+            }
+        }
+
+        stage('Execute Tests') {
+            steps {
+                dir('KARATENOVO_PLAYWRIGHT') {
+                    // Execute Playwright tests
+                    // Playwright automatically downloads browsers on first run if not present
+                    sh 'mvn test'
+                }
+            }
+            post {
+                always {
+                    dir('KARATENOVO_PLAYWRIGHT') {
+                        // Publish JUnit results
+                        junit '**/target/surefire-reports/*.xml'
+                    }
+                }
+            }
+        }
+
+        stage('Archive Reports') {
+            steps {
+                 dir('KARATENOVO_PLAYWRIGHT') {
+                    // Archive surefire reports and any other artifacts (e.g. screenshots/videos if configured)
+                    archiveArtifacts artifacts: '**/target/surefire-reports/**, **/target/playwright-reports/**', allowEmptyArchive: true
+                 }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Playwright tests finished successfully!'
+        }
+        failure {
+            echo 'Playwright automation found failures.'
+        }
+    }
+}
